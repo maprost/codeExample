@@ -1,0 +1,80 @@
+<html>
+<header>
+	<title>Chat</title>
+</header>
+
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+<body>
+	<div id="vue">
+		<div v-for="l in chat">
+			{{l.Date}} - {{ l.Line }}
+		</div>
+		<br>
+		<input v-model="line">
+		<button v-on:click="addChat">send</button>
+	</div>
+</body>
+
+
+<script>
+	const {createApp, ref} = Vue;
+	createApp({
+		setup: function() {
+			return {
+				chat: ref([]),
+				line: ref(''),
+			}
+		},
+		methods: {
+			loadHistory() {
+				console.log("loadHistory");
+				axios.get(`/rest/chat/history`).then(response => {
+					let newChat = response.data;
+					console.log("loadHistory done! -> ", newChat.length);
+					for (let i = 0; i < newChat.length; i++) {
+						this.chat.push(newChat[i]);
+					}
+				})
+			},
+			refresh() {
+				let t = "";
+				if(this.chat != null) {
+					let chatLen = this.chat.length;
+					if (chatLen !== 0) {
+						let lastEntry = this.chat[chatLen - 1];
+						t = lastEntry.Date;
+					}
+				}
+				console.log("refresh: ", t);
+				axios.get(`/rest/chat?t=${t}`).then(response => {
+					let newChat = response.data;
+					console.log("refresh done! -> ", newChat.length);
+					for (let i = 0; i < newChat.length; i++) {
+						this.chat.push(newChat[i]);
+					}
+				})
+			},
+			addChat() {
+				console.log("add chat: ", this.line);
+				axios.post(`/rest/chat`, this.line).then(response => {
+					this.refresh();
+				})
+			},
+		},
+		mounted() {
+			this.loadHistory();
+
+			let self = this;
+			this.$nextTick(function () {
+				window.setInterval(() => {
+					self.refresh();
+				}, 5 * 1000);
+			});
+		}
+	}).mount('#vue');
+</script>
+</html>

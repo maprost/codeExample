@@ -1,0 +1,13 @@
+type {{.enum.Name}}s []{{.enum.Name}}
+
+var All{{.enum.Name}}s = {{.enum.Name}}s{ {{ range $rIndex, $value := .enum.Values }}
+        {{$value.PrefixedName}}, {{- if $value.Comment}}// {{$value.Comment}}{{- end}}
+    {{- end}}
+}
+
+var {{.enum.Name}}CommentMap = map[{{.enum.Name}}]string{
+    {{ range $rIndex, $value := .enum.Values }} {{- if $value.Comment}}
+            {{$value.PrefixedName}}: "{{$value.Comment}}",
+       {{- end}}
+    {{- end}}
+}
